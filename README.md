@@ -1,2 +1,1 @@
-# vector-calculator
-# Vector Calculator  An interactive mathematics and physics tool for performing vector addition, subtraction, dot products, and cross products. Enter two vectors, explore their calculated results, and visualize vector directions and magnitudes on a 2D coordinate plane.
+An interactive mathematics and physics tool for performing vector addition, subtraction, dot products, and cross products. Enter two vectors, explore their calculated results, and visualize vector directions and magnitudes on a 2D coordinate plane.
