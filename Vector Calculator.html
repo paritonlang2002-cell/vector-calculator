@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vector Calculator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;padding:20px;background:#101827;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center}
+.app{width:min(750px,100%);background:#1b2940;padding:25px;border-radius:20px;box-shadow:0 15px 40px #0005}
+h1{text-align:center;color:#70d6ff;margin:0 0 8px}
+.subtitle{text-align:center;color:#b8c7dc;margin-bottom:22px}
+.inputs{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.vector{background:#263751;padding:16px;border-radius:13px}
+.vector h3{margin:0 0 12px}
+.fields{display:flex;gap:10px}
+input{width:50%;min-width:0;padding:11px;border:1px solid #526782;border-radius:8px;background:#101827;color:white;font-size:16px}
+.operations{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:18px 0}
+button{border:0;border-radius:9px;padding:12px 5px;background:#344963;color:#fff;font-weight:bold;cursor:pointer}
+button.active,button:hover{background:#70d6ff;color:#102033}
+canvas{width:100%;height:auto;aspect-ratio:1.5;background:#0c1627;border-radius:12px;border:1px solid #34445e}
+.result{background:#263751;border-radius:12px;padding:16px;margin-top:15px;text-align:center}
+.result h3{margin:0 0 10px;color:#70d6ff}
+#answer{font-size:21px;font-weight:bold;overflow-wrap:anywhere}
+#explanation{color:#b8c7dc;font-size:13px;margin-top:8px}
+@media(max-width:500px){.inputs{grid-template-columns:1fr}.operations{grid-template-columns:repeat(2,1fr)}.app{padding:17px}}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>📐 Vector Calculator</h1>
+<p class="subtitle">Calculate and visualize vector operations in 2D space.</p>
+
+<div class="inputs">
+<div class="vector">
+<h3 style="color:#70d6ff">Vector A</h3>
+<div class="fields">
+<input id="ax" type="number" value="3" placeholder="X">
+<input id="ay" type="number" value="2" placeholder="Y">
+</div>
+</div>
+<div class="vector">
+<h3 style="color:#ffb86b">Vector B</h3>
+<div class="fields">
+<input id="bx" type="number" value="1" placeholder="X">
+<input id="by" type="number" value="3" placeholder="Y">
+</div>
+</div>
+</div>
+
+<div class="operations">
+<button class="active" data-op="add">A + B</button>
+<button data-op="subtract">A − B</button>
+<button data-op="dot">A · B</button>
+<button data-op="cross">A × B</button>
+</div>
+
+<canvas id="plot" width="600" height="400"></canvas>
+
+<div class="result">
+<h3 id="resultTitle">Vector Addition</h3>
+<div id="answer">(4, 5)</div>
+<div id="explanation">The resultant vector is the sum of A and B.</div>
+</div>
+</div>
+
+<script>
+const canvas=document.getElementById("plot"),ctx=canvas.getContext("2d");
+const $=id=>document.getElementById(id);
+let operation="add";
+
+function getVectors(){
+ return {
+  A:{x:+$("ax").value||0,y:+$("ay").value||0},
+  B:{x:+$("bx").value||0,y:+$("by").value||0}
+ };
+}
+
+function calculate(){
+ const {A,B}=getVectors();
+ let R,title,answer,explanation,showResult=true;
+
+ if(operation==="add"){
+  R={x:A.x+B.x,y:A.y+B.y};
+  title="Vector Addition";
+  answer=`(${R.x}, ${R.y})`;
+  explanation="The resultant vector is the sum of A and B.";
+ }else if(operation==="subtract"){
+  R={x:A.x-B.x,y:A.y-B.y};
+  title="Vector Subtraction";
+  answer=`(${R.x}, ${R.y})`;
+  explanation="The resultant vector is A minus B.";
+ }else if(operation==="dot"){
+  R=null;
+  let result=A.x*B.x+A.y*B.y;
+  title="Dot Product";
+  answer=result.toFixed(2);
+  explanation="The dot product is a scalar quantity.";
+ }else{
+  R=null;
+  let result=A.x*B.y-A.y*B.x;
+  title="Cross Product (Z)";
+  answer=result.toFixed(2)+" k";
+  explanation="The 2D cross product gives the Z-component of a 3D vector.";
+ }
+
+ $("resultTitle").textContent=title;
+ $("answer").textContent=answer;
+ $("explanation").textContent=explanation;
+ draw(A,B,R,operation);
+}
+
+function draw(A,B,R,op){
+ ctx.clearRect(0,0,600,400);
+ const cx=300,cy=200,scale=25;
+
+ ctx.strokeStyle="#34445e";
+ ctx.lineWidth=1;
+ for(let x=0;x<=600;x+=25){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,400);ctx.stroke()}
+ for(let y=0;y<=400;y+=25){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(600,y);ctx.stroke()}
+
+ ctx.strokeStyle="#aebed2";
+ ctx.lineWidth=2;
+ ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(600,cy);ctx.moveTo(cx,0);ctx.lineTo(cx,400);ctx.stroke();
+
+ function arrow(v,color,label){
+  let x=cx+v.x*scale,y=cy-v.y*scale;
+  if(Math.abs(v.x)>11||Math.abs(v.y)>7)return;
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();
+  let angle=Math.atan2(y-cy,x-cx);
+  ctx.beginPath();ctx.moveTo(x,y);
+  ctx.lineTo(x-12*Math.cos(angle-.45),y-12*Math.sin(angle-.45));
+  ctx.lineTo(x-12*Math.cos(angle+.45),y-12*Math.sin(angle+.45));
+  ctx.closePath();ctx.fill();
+  ctx.font="bold 16px Arial";
+  ctx.fillText(label,x+8,y-8);
+ }
+
+ arrow(A,"#70d6ff","A");
+ arrow(B,"#ffb86b","B");
+ if(R)arrow(R,"#62e6b5","R");
+
+ ctx.fillStyle="#aebed2";
+ ctx.font="13px Arial";
+ ctx.fillText("X",575,cy-10);
+ ctx.fillText("Y",cx+10,17);
+ ctx.fillText("Scale: 1 unit = 25 px",15,385);
+
+ if(op==="dot"||op==="cross"){
+  ctx.fillStyle="#b8c7dc";
+  ctx.font="14px Arial";
+  ctx.fillText("Scalar result — no resultant vector to plot",15,25);
+ }
+}
+
+document.querySelectorAll(".operations button").forEach(button=>{
+ button.addEventListener("click",()=>{
+  operation=button.dataset.op;
+  document.querySelectorAll(".operations button").forEach(b=>b.classList.remove("active"));
+  button.classList.add("active");
+  calculate();
+ });
+});
+
+document.querySelectorAll("input").forEach(input=>input.addEventListener("input",calculate));
+calculate();
+</script>
+</body>
+</html>
